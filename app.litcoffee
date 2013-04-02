@@ -1,5 +1,7 @@
 # Phase 4, Challenge 1
 
+Install node.js (nodejs.org) then run `make serve` from the command line.
+
 Node.js processes start quickly with the minimum of capabilities. By default
 they can't talk to a web browser. In fact, unlike Ruby processes they can't even
 talk to the filesystem.
