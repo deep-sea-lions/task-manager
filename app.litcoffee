@@ -27,9 +27,23 @@ client.
 
     cs = require 'coffee-script'
 
-Start a web server that responds to two conditions
+Connect is a library for passing http request and response objects through a
+chain of "middleware" handlers. One handler might do something like parse the
+cookie string into a data structure then call the next handler in the
+chain. Another might match against a condition in the request (commonly the
+method and path), create a response and decide there's no need to call the
+next method in the chain.
 
-    server = http.createServer (req, res) ->
+    connect = require 'connect'
+
+Create the connect chain
+
+    app = connect()
+
+Then add a handler for rendering the UI at the root (`/`) url:
+
+    app.use (req, res, next) ->
+      return next() unless req.url is '/'
       res.setHeader 'Content-Type', 'text/html'
 
 If the request is a post then parse out the updated value, save it then render
@@ -74,24 +88,27 @@ into the template.
     renderUI = (cb) ->
       loadData (err, data) ->
         return cb err if err?
-        cb noErr, template + (renderAppData data) + appFrontend
+        cb noErr, [ template, (renderAppData data), appFrontend ].join "\n"
 
     template = fs.readFileSync 'template.html'
 
     renderAppData = (data) ->
-      '<script data-app-data type="text/json">' +
-        (JSON.stringify data) +
-      '</script>'
+      [
+        '<script data-app-data type="text/json">'
+        (JSON.stringify data)
+        '</script>'
+      ].join "\n"
 
 The frontend code is written in CoffeeScript then compiled to JS and wrapped
 in a script tag
 
     appFrontend = cs.compile (fs.readFileSync 'client.litcoffee', 'utf8'), literate: yes
-    appFrontend = '<script>' + appFrontend + '</script>'
+    appFrontend = [ '<script>', appFrontend, '</script>' ].join "\n"
 
-Hook the server up to a port and start listening for requests
+Create a web server, pass the connect chain to it and start listening on a port
 
     port = process.env.PORT ? 3000
+    server = http.createServer app
     server.listen port, -> console.log "app running on port #{port}"
 
 * * *
