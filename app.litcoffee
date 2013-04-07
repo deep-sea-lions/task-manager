@@ -50,7 +50,7 @@ A GET on the root url renders the UI
       res.setHeader 'Content-Type', 'text/html'
 
       renderUI (err, html) ->
-        throw err if err?
+        return next err if err?
         res.end html
 
 A POST parses out the updated value, save it then renders the UI
@@ -64,9 +64,9 @@ A POST parses out the updated value, save it then renders the UI
       req.on 'end', ->
         {item} = querystring.parse body
         saveData item, (err) ->
-          throw err if err?
+          return next err if err?
           renderUI (err, html) ->
-            throw err if err?
+            return next err if err?
             res.end html
 
 Data is stored in a flat file; `saveData` takes a new value and appends it to
