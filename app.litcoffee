@@ -34,6 +34,9 @@ chain. Another might match against a condition in the request (commonly the
 method and path), create a response and decide there's no need to call the
 next method in the chain.
 
+Connect is higher up the abstraction ladder than node's http module or Ruby's
+rack library but lower down than something like Sinatra.
+
     connect = require 'connect'
 
 Create the connect chain
