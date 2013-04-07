@@ -39,8 +39,8 @@ the UI
         body = ''
         req.on 'data', (data) -> body += data
         req.on 'end', ->
-          data = querystring.parse body
-          saveData data, (err) ->
+          {item} = querystring.parse body
+          saveData item, (err) ->
             throw err if err?
             renderUI (err, html) ->
               throw err if err?
@@ -59,13 +59,13 @@ The item's contents are stored in a text file, `saveData` takes a
     dataFile = './item.txt'
 
     saveData = (data, cb) ->
-      fs.appendFile dataFile, data.item + "\n", 'utf8', cb
+      fs.appendFile dataFile, data + "\n", 'utf8', cb
 
     loadData = (cb) ->
-      fs.readFile dataFile, 'utf8', (err, itemData) ->
+      fs.readFile dataFile, 'utf8', (err, data) ->
         return cb err if err?
-        lines = itemData.trim().split "\n"
-        cb noErr, item: last lines
+        lines = data.trim().split "\n"
+        cb noErr, lines
 
 The HTML UI is made up of the DOM template, the `{ item: 'contents of item' }`
 data structure (stashed in a script tag) and some frontend code to load the data
@@ -87,9 +87,12 @@ The frontend code is written in CoffeeScript then compiled to JS and wrapped
 in a script tag
 
     appFrontend = cs.compile """
+      # Get the last item from a list
+      last = (list) -> list.slice(-1)[0]
+
       appData = JSON.parse document.querySelector('[data-app-data]').innerHTML
       itemEl = document.querySelector '[name=item]'
-      itemEl.value = appData.item
+      itemEl.value = last appData
       itemEl.focus()
     """
 
@@ -101,10 +104,6 @@ Hook the server up to a port and start listening for requests
     server.listen port, -> console.log "app running on port #{port}"
 
 * * *
-
-Return the last element in a list
-
-    last = (list) -> list.slice(-1)[0]
 
 Alias to enhance readability
 
