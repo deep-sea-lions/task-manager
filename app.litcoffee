@@ -76,7 +76,11 @@ into the template.
         return cb err if err?
         cb noErr, template + (renderAppData data) + appFrontend
 
-    template = """<form method="post"><input name="item"></form>"""
+    template = """
+      <form method="post"><input name="item"></form>
+      Historical Contents:
+      <ul class="historical-contents"></ul>
+    """
 
     renderAppData = (data) ->
       '<script data-app-data type="text/json">' +
@@ -89,11 +93,19 @@ in a script tag
     appFrontend = cs.compile """
       # Get the last item from a list
       last = (list) -> list.slice(-1)[0]
+      # Get everything but the last item
+      allButLast = (list) -> list.slice(0,-1)
 
-      appData = JSON.parse document.querySelector('[data-app-data]').innerHTML
+      appData = JSON.parse document.querySelector('[data-app-data]').innerText
       itemEl = document.querySelector '[name=item]'
       itemEl.value = last appData
       itemEl.focus()
+
+      historyEl = document.querySelector '.historical-contents'
+      for item in (allButLast appData).reverse()
+        historyItemEl = document.createElement 'li'
+        historyItemEl.innerText = item
+        historyEl.appendChild historyItemEl
     """
 
     appFrontend = '<script>' + appFrontend + '</script>'
