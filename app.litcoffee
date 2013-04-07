@@ -59,12 +59,13 @@ The item's contents are stored in a text file, `saveData` takes a
     dataFile = './item.txt'
 
     saveData = (data, cb) ->
-      fs.writeFile dataFile, data.item, 'utf8', cb
+      fs.appendFile dataFile, data.item + "\n", 'utf8', cb
 
     loadData = (cb) ->
       fs.readFile dataFile, 'utf8', (err, itemData) ->
         return cb err if err?
-        cb noErr, item: itemData.trim()
+        lines = itemData.trim().split "\n"
+        cb noErr, item: last lines
 
 The HTML UI is made up of the DOM template, the `{ item: 'contents of item' }`
 data structure (stashed in a script tag) and some frontend code to load the data
@@ -98,6 +99,12 @@ Hook the server up to a port and start listening for requests
 
     port = process.env.PORT ? 3000
     server.listen port, -> console.log "app running on port #{port}"
+
+* * *
+
+Return the last element in a list
+
+    last = (list) -> list.slice(-1)[0]
 
 Alias to enhance readability
 
