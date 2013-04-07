@@ -69,6 +69,17 @@ A POST parses out the updated value, save it then renders the UI
             return next err if err?
             res.end html
 
+A GET to `/data.json` returns the historical contents of the item as a list
+of strings encoded in JSON
+
+    app.use (req, res, next) ->
+      return next() unless req.url is '/data.json' and req.method is 'GET'
+      res.setHeader 'Content-Type', 'text/json'
+
+      loadData (err, data) ->
+        return next err if err?
+        res.end JSON.stringify data
+
 Data is stored in a flat file; `saveData` takes a new value and appends it to
 the end of the file; `loadData` returns all historical values in chronlogical
 order.
@@ -84,29 +95,24 @@ order.
         lines = data.trim().split "\n"
         cb noErr, lines
 
-The HTML UI is made up of the DOM template, the item's historical values
-(stashed as a json encoded list in a script tag) and some frontend code to load
+The HTML UI is made up of the DOM template and some frontend code to load
 the data into the template.
 
     renderUI = (cb) ->
       loadData (err, data) ->
         return cb err if err?
-        cb noErr, [ template, (renderAppData data), appFrontend ].join "\n"
+        cb noErr, [ template, appFrontend ].join "\n"
 
     template = fs.readFileSync 'template.html'
-
-    renderAppData = (data) ->
-      [
-        '<script data-app-data type="text/json">'
-        (JSON.stringify data)
-        '</script>'
-      ].join "\n"
 
 The frontend code is written in CoffeeScript then compiled to JS and wrapped
 in a script tag
 
-    appFrontend = cs.compile (fs.readFileSync 'client.litcoffee', 'utf8'), literate: yes
-    appFrontend = [ '<script>', appFrontend, '</script>' ].join "\n"
+    reqwest = fs.readFileSync 'reqwest.js', 'utf8'
+    appCS   = fs.readFileSync 'client.litcoffee', 'utf8'
+    appJS   = cs.compile appCS, literate: yes
+    appJS   = [ reqwest, appJS ].join ";\n"
+    appFrontend = [ '<script>', appJS, '</script>' ].join "\n"
 
 Create a web server, pass the connect chain to it and start listening on a port
 

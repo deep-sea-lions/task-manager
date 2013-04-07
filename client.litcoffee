@@ -14,13 +14,16 @@ Get everything but the last item
 
 Load the app data and render the UI
 
-    appData = JSON.parse document.querySelector('[data-app-data]').innerText
-    itemEl = document.querySelector '[name=item]'
-    itemEl.value = last appData
-    itemEl.focus()
+    reqwest
+      url: '/data.json'
+      error: (err) -> console.error "failed to retreive app data", err
+      success: (appData) ->
+        itemEl = document.querySelector '[name=item]'
+        itemEl.value = last appData
+        itemEl.focus()
 
-    historyEl = document.querySelector '.historical-contents'
-    for item in (allButLast appData).reverse()
-      historyItemEl = document.createElement 'li'
-      historyItemEl.innerText = item
-      historyEl.appendChild historyItemEl
+        historyEl = document.querySelector '.historical-contents'
+        for item in (allButLast appData).reverse()
+          historyItemEl = document.createElement 'li'
+          historyItemEl.innerText = item
+          historyEl.appendChild historyItemEl
