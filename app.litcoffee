@@ -43,32 +43,31 @@ Create the connect chain
 
     app = connect()
 
-Then add a handler for rendering the UI at the root (`/`) url:
+A GET on the root url renders the UI
 
     app.use (req, res, next) ->
-      return next() unless req.url is '/'
+      return next() unless req.url is '/' and req.method is 'GET'
       res.setHeader 'Content-Type', 'text/html'
 
-If the request is a post then parse out the updated value, save it then render
-the UI
+      renderUI (err, html) ->
+        throw err if err?
+        res.end html
 
-      if req.method is 'POST'
-        body = ''
-        req.on 'data', (data) -> body += data
-        req.on 'end', ->
-          {item} = querystring.parse body
-          saveData item, (err) ->
-            throw err if err?
-            renderUI (err, html) ->
-              throw err if err?
-              res.end html
+A POST parses out the updated value, save it then renders the UI
 
-Otherwise just render the UI
+    app.use (req, res, next) ->
+      return next() unless req.url is '/' and req.method is 'POST'
+      res.setHeader 'Content-Type', 'text/html'
 
-      else
-        renderUI (err, html) ->
+      body = ''
+      req.on 'data', (data) -> body += data
+      req.on 'end', ->
+        {item} = querystring.parse body
+        saveData item, (err) ->
           throw err if err?
-          res.end html
+          renderUI (err, html) ->
+            throw err if err?
+            res.end html
 
 Data is stored in a flat file; `saveData` takes a new value and appends it to
 the end of the file; `loadData` returns all historical values in chronlogical
