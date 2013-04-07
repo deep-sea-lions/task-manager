@@ -1,4 +1,4 @@
-# Phase 4, Challenge 1
+# Phase 4 Project
 
 Install node.js (nodejs.org) then run `make serve` from the command line.
 
@@ -86,7 +86,7 @@ into the template.
 The frontend code is written in CoffeeScript then compiled to JS and wrapped
 in a script tag
 
-    appFrontend = cs.compile fs.readFileSync 'client.coffee'
+    appFrontend = cs.compile (fs.readFileSync 'client.litcoffee', 'utf8'), literate: yes
     appFrontend = '<script>' + appFrontend + '</script>'
 
 Hook the server up to a port and start listening for requests
