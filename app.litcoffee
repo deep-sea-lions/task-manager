@@ -70,8 +70,9 @@ Otherwise just render the UI
           throw err if err?
           res.end html
 
-The item's contents are stored in a text file, `saveData` takes a
-`{ item: 'contents of item' }` data structure and `loadData` returns one.
+Data is stored in a flat file; `saveData` takes a new value and appends it to
+the end of the file; `loadData` returns all historical values in chronlogical
+order.
 
     dataFile = './item.txt'
 
@@ -84,9 +85,9 @@ The item's contents are stored in a text file, `saveData` takes a
         lines = data.trim().split "\n"
         cb noErr, lines
 
-The HTML UI is made up of the DOM template, the `{ item: 'contents of item' }`
-data structure (stashed in a script tag) and some frontend code to load the data
-into the template.
+The HTML UI is made up of the DOM template, the item's historical values
+(stashed as a json encoded list in a script tag) and some frontend code to load
+the data into the template.
 
     renderUI = (cb) ->
       loadData (err, data) ->
