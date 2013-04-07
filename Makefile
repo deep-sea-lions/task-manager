@@ -7,4 +7,7 @@ serve:
 	touch item.txt
 	$(COFFEE) app.litcoffee
 
+reloader:
+	NODE_ENV=development wachs --except item.txt make serve
+
 .PHONY: serve
