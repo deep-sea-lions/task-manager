@@ -122,7 +122,7 @@ The HTML UI is made up of the DOM template and some frontend code to load
 the data into the template.
 
     renderUI = (cb) ->
-      cb noErr, [ template, appFrontend ].join "\n"
+      cb noErr, [ template, '<script>', appJS, '</script>' ].join "\n"
 
     template = fs.readFileSync 'template.html'
 
@@ -136,7 +136,6 @@ in a script tag
     appCS = fs.readFileSync 'client.litcoffee', 'utf8'
     appJS = cs.compile appCS, literate: yes
     appJS = [ deps, appJS ].join ";\n"
-    appFrontend = [ '<script>', appJS, '</script>' ].join "\n"
 
 Create a web server, pass the connect chain to it and start listening on a port
 
