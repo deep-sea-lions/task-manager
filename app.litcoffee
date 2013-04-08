@@ -122,9 +122,7 @@ The HTML UI is made up of the DOM template and some frontend code to load
 the data into the template.
 
     renderUI = (cb) ->
-      loadData (err, data) ->
-        return cb err if err?
-        cb noErr, [ template, appFrontend ].join "\n"
+      cb noErr, [ template, appFrontend ].join "\n"
 
     template = fs.readFileSync 'template.html'
 
