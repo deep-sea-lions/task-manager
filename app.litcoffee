@@ -80,6 +80,29 @@ of strings encoded in JSON
         return next err if err?
         res.end JSON.stringify data
 
+A GET to `/default.appcache` returns the list of paths that the browser should
+cache and not request again unless the contents of _this_ route (the manifest)
+change. Right now that's just the root path.
+
+Below the list of paths we include the "client fingerprint" in a comment. This
+is a string is guaranteed to change every time one of the files used to build
+the contents of the root url changes.
+
+    app.use (req, res, next) ->
+      return next() unless req.url is '/default.appcache' and req.method is 'GET'
+      clientFingerprint (err, fingerprint) ->
+        return next err if err?
+        res.end """
+        CACHE MANIFEST
+        CACHE:
+        /
+        NETWORK:
+        *
+        # client fingerprint: #{fingerprint}
+        """
+
+    clientFingerprint = require './client-fingerprint'
+
 Data is stored in a flat file; `saveData` takes a new value and appends it to
 the end of the file; `loadData` returns all historical values in chronlogical
 order.
