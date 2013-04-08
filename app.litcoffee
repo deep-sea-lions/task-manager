@@ -131,10 +131,13 @@ the data into the template.
 The frontend code is written in CoffeeScript then compiled to JS and wrapped
 in a script tag
 
-    reqwest = fs.readFileSync 'reqwest.js', 'utf8'
-    appCS   = fs.readFileSync 'client.litcoffee', 'utf8'
-    appJS   = cs.compile appCS, literate: yes
-    appJS   = [ reqwest, appJS ].join ";\n"
+    deps = ''
+    deps += fs.readFileSync 'reqwest.js', 'utf8'
+    deps += fs.readFileSync 'ready.js', 'utf8'
+
+    appCS = fs.readFileSync 'client.litcoffee', 'utf8'
+    appJS = cs.compile appCS, literate: yes
+    appJS = [ deps, appJS ].join ";\n"
     appFrontend = [ '<script>', appJS, '</script>' ].join "\n"
 
 Create a web server, pass the connect chain to it and start listening on a port
