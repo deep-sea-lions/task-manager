@@ -1,4 +1,4 @@
-# Phase 4, Challenge 1
+# Phase 4 Project
 
 Install node.js (nodejs.org) then run `make serve` from the command line.
 
@@ -35,91 +35,143 @@ client.
 cs = require 'coffee-script'
 ```
 
-Start a web server that responds to two conditions
+Connect is a library for passing http request and response objects through a
+chain of "middleware" handlers. One handler might do something like parse the
+cookie string into a data structure then call the next handler in the
+chain. Another might match against a condition in the request (commonly the
+method and path), create a response and decide there's no need to call the
+next method in the chain.
+
+Connect is higher up the abstraction ladder than node's http module or Ruby's
+rack library but lower down than something like Sinatra.
 
 ```coffeescript
-server = http.createServer (req, res) ->
+connect = require 'connect'
+```
+
+Create the connect chain
+
+```coffeescript
+app = connect()
+```
+
+A GET on the root url renders the UI
+
+```coffeescript
+app.use (req, res, next) ->
+  return next() unless req.url is '/' and req.method is 'GET'
   res.setHeader 'Content-Type', 'text/html'
+
+  renderUI (err, html) ->
+    return next err if err?
+    res.end html
 ```
 
-If the request is a post then parse out the updated value, save it then render
-the UI
+A POST parses out the updated value, save it then renders the UI
 
 ```coffeescript
-  if req.method is 'POST'
-    body = ''
-    req.on 'data', (data) -> body += data
-    req.on 'end', ->
-      data = querystring.parse body
-      saveData data, (err) ->
-        throw err if err?
-        renderUI (err, html) ->
-          throw err if err?
-          res.end html
+app.use (req, res, next) ->
+  return next() unless req.url is '/' and req.method is 'POST'
+  res.setHeader 'Content-Type', 'text/html'
+
+  body = ''
+  req.on 'data', (data) -> body += data
+  req.on 'end', ->
+    {item} = querystring.parse body
+    saveData item, (err) ->
+      return next err if err?
+      renderUI (err, html) ->
+        return next err if err?
+        res.end html
 ```
 
-Otherwise just render the UI
+A GET to `/data.json` returns the historical contents of the item as a list
+of strings encoded in JSON
 
 ```coffeescript
-  else
-    renderUI (err, html) ->
-      throw err if err?
-      res.end html
+app.use (req, res, next) ->
+  return next() unless req.url is '/data.json' and req.method is 'GET'
+  res.setHeader 'Content-Type', 'text/json'
+
+  loadData (err, data) ->
+    return next err if err?
+    res.end JSON.stringify data
 ```
 
-The item's contents are stored in a text file, `saveData` takes a
-`{ item: 'contents of item' }` data structure and `loadData` returns one.
+A GET to `/default.appcache` returns the list of paths that the browser should
+cache and not request again unless the contents of _this_ route (the manifest)
+change. Right now that's just the root path.
+
+Below the list of paths we include the "client fingerprint" in a comment. This
+is a string is guaranteed to change every time one of the files used to build
+the contents of the root url changes.
+
+```coffeescript
+app.use (req, res, next) ->
+  return next() unless req.url is '/default.appcache' and req.method is 'GET'
+  clientFingerprint (err, fingerprint) ->
+    return next err if err?
+    res.end """
+    CACHE MANIFEST
+    CACHE:
+    /
+    NETWORK:
+    *
+    # client fingerprint: #{fingerprint}
+    """
+
+clientFingerprint = require './client-fingerprint'
+```
+
+Data is stored in a flat file; `saveData` takes a new value and appends it to
+the end of the file; `loadData` returns all historical values in chronlogical
+order.
 
 ```coffeescript
 dataFile = './item.txt'
 
 saveData = (data, cb) ->
-  fs.writeFile dataFile, data.item, 'utf8', cb
+  fs.appendFile dataFile, data + "\n", 'utf8', cb
 
 loadData = (cb) ->
-  fs.readFile dataFile, 'utf8', (err, itemData) ->
+  fs.readFile dataFile, 'utf8', (err, data) ->
     return cb err if err?
-    cb noErr, item: itemData.trim()
+    lines = data.trim().split "\n"
+    cb noErr, lines
 ```
 
-The HTML UI is made up of the DOM template, the `{ item: 'contents of item' }`
-data structure (stashed in a script tag) and some frontend code to load the data
-into the template.
+The HTML UI is made up of the DOM template and some frontend code to load
+the data into the template.
 
 ```coffeescript
 renderUI = (cb) ->
-  loadData (err, data) ->
-    return cb err if err?
-    cb noErr, template + (renderAppData data) + appFrontend
+  cb noErr, [ template, '<script>', appJS, '</script>' ].join "\n"
 
-template = """<form method="post"><input name="item"></form>"""
-
-renderAppData = (data) ->
-  '<script data-app-data type="text/json">' +
-    (JSON.stringify data) +
-  '</script>'
+template = fs.readFileSync 'template.html'
 ```
 
 The frontend code is written in CoffeeScript then compiled to JS and wrapped
 in a script tag
 
 ```coffeescript
-appFrontend = cs.compile """
-  appData = JSON.parse document.querySelector('[data-app-data]').innerHTML
-  itemEl = document.querySelector '[name=item]'
-  itemEl.value = appData.item
-  itemEl.focus()
-"""
+deps = ''
+deps += fs.readFileSync 'reqwest.js', 'utf8'
+deps += fs.readFileSync 'ready.js', 'utf8'
 
-appFrontend = '<script>' + appFrontend + '</script>'
+appCS = fs.readFileSync 'client.litcoffee', 'utf8'
+appJS = cs.compile appCS, literate: yes
+appJS = [ deps, appJS ].join ";\n"
 ```
 
-Hook the server up to a port and start listening for requests
+Create a web server, pass the connect chain to it and start listening on a port
 
 ```coffeescript
 port = process.env.PORT ? 3000
+server = http.createServer app
 server.listen port, -> console.log "app running on port #{port}"
 ```
+
+* * *
 
 Alias to enhance readability
 
