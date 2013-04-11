@@ -96,6 +96,7 @@ the contents of the root url changes.
         CACHE MANIFEST
         CACHE:
         /
+        /app.js
         NETWORK:
         *
         # client fingerprint: #{fingerprint}
