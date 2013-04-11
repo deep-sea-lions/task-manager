@@ -1,11 +1,11 @@
 COFFEE=./node_modules/.bin/coffee
 
-README.md: app.litcoffee
+README.md: server.litcoffee
 	cat $< | $(COFFEE) githubify.litcoffee > $@
 
 serve:
 	touch item.txt
-	$(COFFEE) app.litcoffee
+	$(COFFEE) server.litcoffee
 
 reloader:
 	NODE_ENV=development wachs --except item.txt make serve

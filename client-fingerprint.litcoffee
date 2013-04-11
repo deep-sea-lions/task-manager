@@ -5,7 +5,7 @@ has changed so you don't have to do a "full body scan".
 
 The UI code that's sent to the browser is built from a number of source files.
 There's the HTML template, the `client.litcoffee` and it's depdencies, and (for
-now) the actual compilation process happens in `app.litcoffee`.
+now) the actual compilation process happens in `server.litcoffee`.
 
 So we make the client fingerprint the output of concatenating the modification
 times of all the relevant sources files and then passing that through a hash
@@ -21,7 +21,7 @@ The filename list to map over
 
     relevantSourceFiles = [
       'template.html'      # app's html
-      'app.litcoffee'      # compilation process here
+      'server.litcoffee'   # compilation process here
       'client.litcoffee'   # frontend code
       'reqwest.js'         # frontend dependency
     ]
