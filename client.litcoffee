@@ -1,6 +1,10 @@
 # Client (Browser) Code
 
-## The App
+We use the `domready` module for capturing the domready event and the `reqwest`
+module for ajax
+
+    domready = require './ready'
+    reqwest  = require './reqwest'
 
 Load the app data and render the UI
 
@@ -28,4 +32,3 @@ Get the last item from a list
 Get everything but the last item
 
     allButLast = (list) -> list.slice(0,-1)
-

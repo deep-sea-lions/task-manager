@@ -103,6 +103,20 @@ the contents of the root url changes.
 
     clientFingerprint = require './client-fingerprint'
 
+A GET to `/app.js` renders the application's javascript (with browserify)
+
+    browserify = require 'browserify'
+    coffeeify  = require 'coffeeify'
+
+    app.use (req, res, next) ->
+      return next() unless req.url is '/app.js' and req.method is 'GET'
+      browserify('./client.litcoffee').transform(coffeeify).bundle
+        debug: yes
+      , (err, js) ->
+        return next err if err # browserify err is false, not nil :(
+        res.setHeader 'Content-Type', 'text/javascript'
+        res.end js
+
 Data is stored in a flat file; `saveData` takes a new value and appends it to
 the end of the file; `loadData` returns all historical values in chronlogical
 order.
@@ -118,24 +132,12 @@ order.
         lines = data.trim().split "\n"
         cb noErr, lines
 
-The HTML UI is made up of the DOM template and some frontend code to load
-the data into the template.
+The UI is just some template html with a script tag down the bottom that loads
+in all the behavior. This doesn't need to be a function that takes a callback
+anymore.
 
-    renderUI = (cb) ->
-      cb noErr, [ template, '<script>', appJS, '</script>' ].join "\n"
-
+    renderUI = (cb) -> cb noErr, template
     template = fs.readFileSync 'template.html'
-
-The frontend code is written in CoffeeScript then compiled to JS and wrapped
-in a script tag
-
-    deps = ''
-    deps += fs.readFileSync 'reqwest.js', 'utf8'
-    deps += fs.readFileSync 'ready.js', 'utf8'
-
-    appCS = fs.readFileSync 'client.litcoffee', 'utf8'
-    appJS = cs.compile appCS, literate: yes
-    appJS = [ deps, appJS ].join ";\n"
 
 Create a web server, pass the connect chain to it and start listening on a port
 
