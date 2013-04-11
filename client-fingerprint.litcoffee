@@ -23,7 +23,6 @@ The filename list to map over
       'template.html'      # app's html
       'server.litcoffee'   # compilation process here
       'client.litcoffee'   # frontend code
-      'reqwest.js'         # frontend dependency
     ]
 
 A function for getting file "stats" - from node's fs module

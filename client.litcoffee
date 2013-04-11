@@ -1,10 +1,10 @@
 # Client (Browser) Code
 
 We use the `domready` module for capturing the domready event and the `reqwest`
-module for ajax
+module for ajax.
 
-    domready = require './ready'
-    reqwest  = require './reqwest'
+    domready = require 'domready'
+    reqwest  = require 'reqwest'
 
 Load the app data and render the UI
 
