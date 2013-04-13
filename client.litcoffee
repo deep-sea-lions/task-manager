@@ -11,16 +11,25 @@ Load the data then render the UI
     domready ->
       loadData (err, appData) ->
         (console.error "failed to retreive app data", err ; return) if err
+        itemValue   = last appData
+        itemHistory = allButLast appData
 
-        itemEl = document.querySelector '[name=item]'
-        itemEl.value = last appData
-        itemEl.focus()
+        renderItemView (document.querySelector '[name=item]'), itemValue
+        renderHistoryView (document.querySelector '.historical-contents'),
+          itemHistory
 
-        historyEl = document.querySelector '.historical-contents'
-        for item in (allButLast appData).reverse()
-          historyItemEl = document.createElement 'li'
-          historyItemEl.innerText = item
-          historyEl.appendChild historyItemEl
+The UI is composed of two views: the item viewer/editor and the historical
+contents list.
+
+    renderItemView = (el, itemValue) ->
+      el.value = itemValue
+      el.focus()
+
+    renderHistoryView = (el, itemHistory) ->
+      for item in itemHistory.reverse()
+        historyItemEl = document.createElement 'li'
+        historyItemEl.innerText = item
+        el.appendChild historyItemEl
 
 Loads the app's data from the server
 
