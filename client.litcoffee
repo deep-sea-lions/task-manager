@@ -8,7 +8,7 @@ module for ajax.
 
 Start the app on when the domready event fires
 
-    domready -> init()
+    domready -> do init
 
 The app's initialization process - load the data then render the UI
 
