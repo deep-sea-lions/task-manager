@@ -1,9 +1,31 @@
 <!DOCTYPE html>
 <html manifest="/default.appcache">
-<body>
+<head>
+  <meta charset="utf-8">
+  <link href="/app.css" rel="stylesheet">
+</head>
 
-<form method="post"><input name="item"></form>
-Historical Contents:
-<ul class="historical-contents"></ul>
+<body class="loading">
+
+<!--
+Shown while the App's html is being parsed, JS is being parsed and
+dataset is being loaded. Ideally that should all happen so quickly the user
+never sees this.
+-->
+<div id="init-loader">
+  Loading ...
+</div>
+
+<!-- The App's UI -->
+<div id="main">
+  <form method="post"><input name="item"></form>
+  Historical Contents:
+  <ul class="historical-contents"></ul>
+</div>
+
+<!-- Shown if the App fails to initialize -->
+<div id="init-error">
+  ☹
+</div>
 
 <script src="/app.js"></script>

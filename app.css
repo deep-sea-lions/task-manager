@@ -1,0 +1,13 @@
+/*
+During app initialization the body element has the `loading` class. While
+in this state, everything direct descendant except the `init-loader` is hidden.
+*/
+
+body.loading > *:not(#init-loader) { display: none }
+
+/*
+If the .error class is set on the body element then `init-error` is shown and
+everything else is hidden.
+*/
+
+body.error > *:not(#init-error) { display: none }

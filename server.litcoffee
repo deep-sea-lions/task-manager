@@ -118,6 +118,16 @@ A GET to `/app.js` renders the application's javascript (with browserify)
         res.setHeader 'Content-Type', 'text/javascript'
         res.end js
 
+A GET to `/app.css` renders the application's css
+
+    app.use ({url, method}, res, next) ->
+      unless url is '/app.css' and method is 'GET' then do next ; return
+
+      fs.readFile 'app.css', 'utf8', (err, fileContents) ->
+        if err then next err ; return
+        res.setHeader 'Content-Type', 'text/css'
+        res.end fileContents
+
 Data is stored in a flat file; `saveData` takes a new value and appends it to
 the end of the file; `loadData` returns all historical values in chronlogical
 order.

@@ -26,7 +26,7 @@ The app's initialization process - load the data then render the UI
 The error handler for errors that occur during initialization. Needs UX love.
 
     initError = (err) ->
-      console.error "Initialization Error:", err
+      document.body.className = 'error'
 
 The UI is composed of two views: the item viewer/editor and the historical
 contents list.
