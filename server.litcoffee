@@ -64,10 +64,8 @@ A POST parses out the updated value, save it then renders the UI
         {item} = querystring.parse body
         saveData item, (err) ->
           if err then next err ; return
-          renderUI (err, html) ->
-            if err then next err ; return
-            res.setHeader 'Content-Type', 'text/html'
-            res.end html
+          res.setHeader 'Content-Type', 'text/json'
+          res.end JSON.stringify {item}
 
 A GET to `/data.json` returns the historical contents of the item as a list
 of strings encoded in JSON

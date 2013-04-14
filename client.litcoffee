@@ -19,9 +19,7 @@ The app's initialization process - load the data then render the UI
         itemValue   = last appData
         itemHistory = allButLast appData
 
-        renderItemView (document.querySelector '[name=item]'), itemValue
-        renderHistoryView (document.querySelector '.historical-contents'),
-          itemHistory
+        renderUI itemValue, itemHistory
 
         document.body.className = 'loaded'
 
@@ -30,14 +28,37 @@ The error handler for errors that occur during initialization. Needs UX love.
     initError = (err) ->
       document.body.className = 'error'
 
+Render the whole UI
+
+    renderUI = (itemValue, itemHistory) ->
+      renderItemView (document.querySelector '.item-editor'), itemValue
+      renderHistoryView (document.querySelector '.historical-contents'),
+        itemHistory
+
 The UI is composed of two views: the item viewer/editor and the historical
 contents list.
 
-    renderItemView = (el, itemValue) ->
-      el.value = itemValue
-      el.focus()
+    renderItemView = (el, itemValue, itemHistory) ->
+      unless el.submitHandlerBound
+        el.addEventListener 'submit', (event) ->
+          event.preventDefault()
+          newItemValue = inputEl.value
+          reqwest
+            url: '/'
+            method: 'POST'
+            data: item: newItemValue
+            type: 'json'
+            error: networkError
+            success: (response) -> window.location.reload()
+
+      el.submitHandlerBound = yes
+
+      inputEl = el.querySelector '[name=item]'
+      inputEl.value = itemValue
+      inputEl.focus()
 
     renderHistoryView = (el, itemHistory) ->
+      el.innerHTML = ''
       for item in itemHistory.reverse()
         historyItemEl = document.createElement 'li'
         historyItemEl.innerText = item
@@ -51,6 +72,11 @@ Loads the app's data from the server
         error: (err) -> cb err
         success: (response) -> cb noErr, response
 
+A handler called when an error occurs during a networking (ajax) call. Need
+better UX here.
+
+    networkError = (err) ->
+      console.error 'Network Error:', err
 
 ## Some helpers
 
