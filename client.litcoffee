@@ -23,6 +23,8 @@ The app's initialization process - load the data then render the UI
         renderHistoryView (document.querySelector '.historical-contents'),
           itemHistory
 
+        document.body.className = 'loaded'
+
 The error handler for errors that occur during initialization. Needs UX love.
 
     initError = (err) ->

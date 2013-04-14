@@ -11,3 +11,9 @@ everything else is hidden.
 */
 
 body.error > *:not(#init-error) { display: none }
+
+/*
+Once the app has loaded successfully only the `main` element is shown
+*/
+
+body.loaded > *:not(#main) { display: none }
