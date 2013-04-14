@@ -45,39 +45,39 @@ Create the connect chain
 
 A GET on the root url renders the UI
 
-    app.use (req, res, next) ->
-      return next() unless req.url is '/' and req.method is 'GET'
-      res.setHeader 'Content-Type', 'text/html'
-
+    app.use ({url, method}, res, next) ->
+      unless url is '/' and method is 'GET' then do next ; return
       renderUI (err, html) ->
-        return next err if err?
+        if err then next err ; return
+        res.setHeader 'Content-Type', 'text/html'
         res.end html
 
 A POST parses out the updated value, save it then renders the UI
 
     app.use (req, res, next) ->
-      return next() unless req.url is '/' and req.method is 'POST'
-      res.setHeader 'Content-Type', 'text/html'
+      {url, method} = req
+      unless url is '/' and method is 'POST' then do next ; return
 
       body = ''
       req.on 'data', (data) -> body += data
       req.on 'end', ->
         {item} = querystring.parse body
         saveData item, (err) ->
-          return next err if err?
+          if err then next err ; return
           renderUI (err, html) ->
-            return next err if err?
+            if err then next err ; return
+            res.setHeader 'Content-Type', 'text/html'
             res.end html
 
 A GET to `/data.json` returns the historical contents of the item as a list
 of strings encoded in JSON
 
-    app.use (req, res, next) ->
-      return next() unless req.url is '/data.json' and req.method is 'GET'
-      res.setHeader 'Content-Type', 'text/json'
+    app.use ({url, method}, res, next) ->
+      unless url is '/data.json' and method is 'GET' then do next ; return
 
       loadData (err, data) ->
-        return next err if err?
+        if err then next err ; return
+        res.setHeader 'Content-Type', 'text/json'
         res.end JSON.stringify data
 
 A GET to `/default.appcache` returns the list of paths that the browser should
@@ -88,10 +88,10 @@ Below the list of paths we include the "client fingerprint" in a comment. This
 is a string is guaranteed to change every time one of the files used to build
 the contents of the root url changes.
 
-    app.use (req, res, next) ->
-      return next() unless req.url is '/default.appcache' and req.method is 'GET'
+    app.use ({url, method}, res, next) ->
+      unless url is '/default.appcache' and method is 'GET' then do next ; return
       clientFingerprint (err, fingerprint) ->
-        return next err if err?
+        if err then next err ; return
         res.end """
         CACHE MANIFEST
         CACHE:
@@ -109,12 +109,12 @@ A GET to `/app.js` renders the application's javascript (with browserify)
     browserify = require 'browserify'
     coffeeify  = require 'coffeeify'
 
-    app.use (req, res, next) ->
-      return next() unless req.url is '/app.js' and req.method is 'GET'
+    app.use ({url, method}, res, next) ->
+      unless url is '/app.js' and method is 'GET' then do next ; return
       browserify('./client.litcoffee').transform(coffeeify).bundle
         debug: yes
       , (err, js) ->
-        return next err if err # browserify err is false, not nil :(
+        if err then next err ; return
         res.setHeader 'Content-Type', 'text/javascript'
         res.end js
 
