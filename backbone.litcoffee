@@ -11,6 +11,7 @@ is an experiment to see if that's possible.
     module.exports = backbone
 
     backbone.$ = (args...) ->
+      # probably fails when args[0] is a string
       # probably fails when args[0] is window
       # probably fails if passed an array constructed with this fn
       extend (bonzo args...), @$extensions
