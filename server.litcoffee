@@ -61,7 +61,7 @@ A POST parses out the updated value, save it then renders the UI
 
     app.use dispatch 'POST /' : connect urlencodedBody, (req, res, next) ->
       {item} = req.body
-      saveData item, (err) ->
+      db.saveData item, (err) ->
         if err then next err ; return
         res.setHeader 'Content-Type', 'text/json'
         res.end JSON.stringify {item}
@@ -70,7 +70,7 @@ A GET to `/data.json` returns the historical contents of the item as a list
 of strings encoded in JSON
 
     app.use dispatch 'GET /data.json' : (req, res, next) ->
-      loadData (err, data) ->
+      db.loadData (err, data) ->
         if err then next err ; return
         res.setHeader 'Content-Type', 'text/json'
         res.end JSON.stringify data
@@ -110,10 +110,12 @@ order.
 
     dataFile = './item.txt'
 
-    saveData = (data, cb) ->
+    db = {}
+
+    db.saveData = (data, cb) ->
       fs.appendFile dataFile, data + "\n", 'utf8', cb
 
-    loadData = (cb) ->
+    db.loadData = (cb) ->
       fs.readFile dataFile, 'utf8', (err, data) ->
         return cb err if err?
         lines = data.trim().split "\n"
