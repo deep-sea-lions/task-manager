@@ -6,12 +6,6 @@ Node.js processes start quickly with the minimum of capabilities. By default
 they can't talk to a web browser. In fact, unlike Ruby processes they can't even
 talk to the filesystem.
 
-For this challenge we need three modules from the standard library.
-
-The `fs` module for reading and writing files
-
-    fs = require 'fs'
-
 The `http` module allows us to talk the HTTP protocol to other programs
 
     http = require 'http'
@@ -57,24 +51,6 @@ script tag down the bottom that loads in all the behavior.
     app.use dispatch 'GET /' : (req, res, next) ->
       send(req, 'template.html').pipe res
 
-A POST parses out the updated value, save it then renders the UI
-
-    app.use dispatch 'POST /' : connect urlencodedBody, (req, res, next) ->
-      {item} = req.body
-      db.saveData item, (err) ->
-        if err then next err ; return
-        res.setHeader 'Content-Type', 'text/json'
-        res.end JSON.stringify {item}
-
-A GET to `/data.json` returns the historical contents of the item as a list
-of strings encoded in JSON
-
-    app.use dispatch 'GET /data.json' : (req, res, next) ->
-      db.loadData (err, data) ->
-        if err then next err ; return
-        res.setHeader 'Content-Type', 'text/json'
-        res.end JSON.stringify data
-
 A GET to `/default.appcache` returns the list of paths that the browser should
 cache and not request again unless the contents of _this_ route (the manifest)
 change.
@@ -101,22 +77,24 @@ A GET to `/app.css` renders the application's css
     app.use dispatch 'GET /app.css' : (req, res, next) ->
       send(req, 'app.css').pipe res
 
-Data is stored in a flat file; `saveData` takes a new value and appends it to
-the end of the file; `loadData` returns all historical values in chronlogical
-order.
+We have two routes for dealing with data, a GET to `/data.json` returns the
+historical contents of the item as a list of strings encoded in JSON. A POST
+to `/` parses out the updated value, save it then renders the UI
 
-    dataFile = './item.txt'
+    db = require './db'
 
-    db = {}
+    app.use dispatch 'POST /' : connect urlencodedBody, (req, res, next) ->
+      {item} = req.body
+      db.saveData item, (err) ->
+        if err then next err ; return
+        res.setHeader 'Content-Type', 'text/json'
+        res.end JSON.stringify {item}
 
-    db.saveData = (data, cb) ->
-      fs.appendFile dataFile, data + "\n", 'utf8', cb
-
-    db.loadData = (cb) ->
-      fs.readFile dataFile, 'utf8', (err, data) ->
-        return cb err if err?
-        lines = data.trim().split "\n"
-        cb noErr, lines
+    app.use dispatch 'GET /data.json' : (req, res, next) ->
+      db.loadData (err, data) ->
+        if err then next err ; return
+        res.setHeader 'Content-Type', 'text/json'
+        res.end JSON.stringify data
 
 Create a web server, pass the connect chain to it and start listening on a port
 
