@@ -86,18 +86,15 @@ change.
 
     clientManifest = require './cache-manifest'
 
-A GET to `/app.js` renders the application's javascript (with browserify)
-
-    browserify = require 'browserify'
-    coffeeify  = require 'coffeeify'
+A GET to `/app.js` renders the application's javascript
 
     app.use dispatch 'GET /app.js' : (req, res, next) ->
-      browserify('./client.litcoffee').transform(coffeeify).bundle
-        debug: yes
-      , (err, js) ->
+      clientCompiler (err, js) ->
         if err then next err ; return
         res.setHeader 'Content-Type', 'text/javascript'
         res.end js
+
+    clientCompiler = require './client-compiler'
 
 A GET to `/app.css` renders the application's css
 
