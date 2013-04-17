@@ -10,15 +10,9 @@ The `http` module allows us to talk the HTTP protocol to other programs
 
     http = require 'http'
 
-The `send` module for serving static files
+The `send` module handles serving the contents of a file as a http response
 
     send = require 'send'
-
-We also load CoffeeScript (from npm, node's rubygems equivalent) so we can
-write our front end code in CS then compile it to JS before sending it to the
-client.
-
-    cs = require 'coffee-script'
 
 Connect is a library for passing http request and response objects through a
 chain of "middleware" handlers. One handler might do something like parse the
@@ -32,8 +26,7 @@ rack library but lower down than something like Sinatra.
 
     connect = require 'connect'
 
-Dispatch produces returns a handler that only matches a specific method and
-path.
+Dispatch returns a handler that only matches a specific method and path
 
     dispatch = require 'dispatch'
 
@@ -101,9 +94,3 @@ Create a web server, pass the connect chain to it and start listening on a port
     port = process.env.PORT ? 3000
     server = http.createServer app
     server.listen port, -> console.log "app running on port #{port}"
-
-* * *
-
-Alias to enhance readability
-
-    noErr = null
