@@ -4,8 +4,9 @@ The idea behind a "fingerprint" is to find some cheap way to check if something
 has changed so you don't have to do a "full body scan".
 
 The UI code that's sent to the browser is built from a number of source files.
-There's the HTML template, the `client.litcoffee` and it's depdencies, and (for
-now) the actual compilation process happens in `server.litcoffee`.
+There's the HTML template (served from `/`), the `client.litcoffee` (served
+from `/app.js`) and it's depdencies, the `/app.css` and (for now) the actual
+compilation process happens in `server.litcoffee`.
 
 So we make the client fingerprint the output of concatenating the modification
 times of all the relevant sources files and then passing that through a hash
@@ -19,6 +20,7 @@ function.
 
     relevantSourceFiles = [
       'template.html'      # app's html
+      'app.css'            # app's styles
       'server.litcoffee'   # compilation process here
       'client.litcoffee'   # frontend code
       'backbone.litcoffee' # frontend dependency

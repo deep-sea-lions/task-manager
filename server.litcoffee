@@ -82,26 +82,14 @@ of strings encoded in JSON
 
 A GET to `/default.appcache` returns the list of paths that the browser should
 cache and not request again unless the contents of _this_ route (the manifest)
-change. Right now that's just the root path.
-
-Below the list of paths we include the "client fingerprint" in a comment. This
-is a string is guaranteed to change every time one of the files used to build
-the contents of the root url changes.
+change.
 
     app.use dispatch 'GET /default.appcache' : (req, res, next) ->
-      clientFingerprint (err, fingerprint) ->
+      clientManifest (err, manifest) ->
         if err then next err ; return
-        res.end """
-        CACHE MANIFEST
-        CACHE:
-        /
-        /app.js
-        NETWORK:
-        *
-        # client fingerprint: #{fingerprint}
-        """
+        res.end manifest
 
-    clientFingerprint = require './client-fingerprint'
+    clientManifest = require './cache-manifest'
 
 A GET to `/app.js` renders the application's javascript (with browserify)
 
