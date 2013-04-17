@@ -1,3 +1,4 @@
 # data, not code
 item.txt
 *.sublime-workspace
+/notes
