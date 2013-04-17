@@ -21,6 +21,10 @@ Programs that talk HTTP usually encode information in the querystring format
 
     querystring = require 'querystring'
 
+The `send` module for serving static files
+
+    send = require 'send'
+
 We also load CoffeeScript (from npm, node's rubygems equivalent) so we can
 write our front end code in CS then compile it to JS before sending it to the
 client.
@@ -43,14 +47,13 @@ Create the connect chain
 
     app = connect()
 
-A GET on the root url renders the UI
+A GET on the root url renders the UI. The UI is just some template html with a
+script tag down the bottom that loads in all the behavior.
 
-    app.use ({url, method}, res, next) ->
+    app.use (req, res, next) ->
+      {url, method} = req
       unless url is '/' and method is 'GET' then do next ; return
-      renderUI (err, html) ->
-        if err then next err ; return
-        res.setHeader 'Content-Type', 'text/html'
-        res.end html
+      send(req, 'template.html').pipe res
 
 A POST parses out the updated value, save it then renders the UI
 
@@ -118,13 +121,10 @@ A GET to `/app.js` renders the application's javascript (with browserify)
 
 A GET to `/app.css` renders the application's css
 
-    app.use ({url, method}, res, next) ->
+    app.use (req, res, next) ->
+      {url, method} = req
       unless url is '/app.css' and method is 'GET' then do next ; return
-
-      fs.readFile 'app.css', 'utf8', (err, fileContents) ->
-        if err then next err ; return
-        res.setHeader 'Content-Type', 'text/css'
-        res.end fileContents
+      send(req, 'app.css').pipe res
 
 Data is stored in a flat file; `saveData` takes a new value and appends it to
 the end of the file; `loadData` returns all historical values in chronlogical
@@ -140,13 +140,6 @@ order.
         return cb err if err?
         lines = data.trim().split "\n"
         cb noErr, lines
-
-The UI is just some template html with a script tag down the bottom that loads
-in all the behavior. This doesn't need to be a function that takes a callback
-anymore.
-
-    renderUI = (cb) -> cb noErr, template
-    template = fs.readFileSync 'template.html'
 
 Create a web server, pass the connect chain to it and start listening on a port
 
