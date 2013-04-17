@@ -17,12 +17,11 @@ function.
         mtimes = (s.mtime for s in stats)
         cb noErr, sha1 mtimes.join "\n"
 
-The filename list to map over
-
     relevantSourceFiles = [
       'template.html'      # app's html
       'server.litcoffee'   # compilation process here
       'client.litcoffee'   # frontend code
+      'backbone.litcoffee' # frontend dependency
     ]
 
 A function for getting file "stats" - from node's fs module
