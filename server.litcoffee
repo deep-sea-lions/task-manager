@@ -43,6 +43,11 @@ rack library but lower down than something like Sinatra.
 
     connect = require 'connect'
 
+Dispatch produces returns a handler that only matches a specific method and
+path.
+
+    dispatch = require 'dispatch'
+
 Create the connect chain
 
     app = connect()
@@ -50,17 +55,12 @@ Create the connect chain
 A GET on the root url renders the UI. The UI is just some template html with a
 script tag down the bottom that loads in all the behavior.
 
-    app.use (req, res, next) ->
-      {url, method} = req
-      unless url is '/' and method is 'GET' then do next ; return
+    app.use dispatch 'GET /' : (req, res, next) ->
       send(req, 'template.html').pipe res
 
 A POST parses out the updated value, save it then renders the UI
 
-    app.use (req, res, next) ->
-      {url, method} = req
-      unless url is '/' and method is 'POST' then do next ; return
-
+    app.use dispatch 'POST /' : (req, res, next) ->
       body = ''
       req.on 'data', (data) -> body += data
       req.on 'end', ->
@@ -73,9 +73,7 @@ A POST parses out the updated value, save it then renders the UI
 A GET to `/data.json` returns the historical contents of the item as a list
 of strings encoded in JSON
 
-    app.use ({url, method}, res, next) ->
-      unless url is '/data.json' and method is 'GET' then do next ; return
-
+    app.use dispatch 'GET /data.json' : (req, res, next) ->
       loadData (err, data) ->
         if err then next err ; return
         res.setHeader 'Content-Type', 'text/json'
@@ -89,8 +87,7 @@ Below the list of paths we include the "client fingerprint" in a comment. This
 is a string is guaranteed to change every time one of the files used to build
 the contents of the root url changes.
 
-    app.use ({url, method}, res, next) ->
-      unless url is '/default.appcache' and method is 'GET' then do next ; return
+    app.use dispatch 'GET /default.appcache' : (req, res, next) ->
       clientFingerprint (err, fingerprint) ->
         if err then next err ; return
         res.end """
@@ -110,8 +107,7 @@ A GET to `/app.js` renders the application's javascript (with browserify)
     browserify = require 'browserify'
     coffeeify  = require 'coffeeify'
 
-    app.use ({url, method}, res, next) ->
-      unless url is '/app.js' and method is 'GET' then do next ; return
+    app.use dispatch 'GET /app.js' : (req, res, next) ->
       browserify('./client.litcoffee').transform(coffeeify).bundle
         debug: yes
       , (err, js) ->
@@ -121,9 +117,7 @@ A GET to `/app.js` renders the application's javascript (with browserify)
 
 A GET to `/app.css` renders the application's css
 
-    app.use (req, res, next) ->
-      {url, method} = req
-      unless url is '/app.css' and method is 'GET' then do next ; return
+    app.use dispatch 'GET /app.css' : (req, res, next) ->
       send(req, 'app.css').pipe res
 
 Data is stored in a flat file; `saveData` takes a new value and appends it to
