@@ -16,11 +16,6 @@ The `http` module allows us to talk the HTTP protocol to other programs
 
     http = require 'http'
 
-Programs that talk HTTP usually encode information in the querystring format
-(e.g. `item=%22foo+bar%22`)
-
-    querystring = require 'querystring'
-
 The `send` module for serving static files
 
     send = require 'send'
