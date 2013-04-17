@@ -48,6 +48,10 @@ path.
 
     dispatch = require 'dispatch'
 
+A hanlder that parses the querystring POST body into a map
+
+    urlencodedBody = connect.urlencoded()
+
 Create the connect chain
 
     app = connect()
@@ -60,15 +64,12 @@ script tag down the bottom that loads in all the behavior.
 
 A POST parses out the updated value, save it then renders the UI
 
-    app.use dispatch 'POST /' : (req, res, next) ->
-      body = ''
-      req.on 'data', (data) -> body += data
-      req.on 'end', ->
-        {item} = querystring.parse body
-        saveData item, (err) ->
-          if err then next err ; return
-          res.setHeader 'Content-Type', 'text/json'
-          res.end JSON.stringify {item}
+    app.use dispatch 'POST /' : connect urlencodedBody, (req, res, next) ->
+      {item} = req.body
+      saveData item, (err) ->
+        if err then next err ; return
+        res.setHeader 'Content-Type', 'text/json'
+        res.end JSON.stringify {item}
 
 A GET to `/data.json` returns the historical contents of the item as a list
 of strings encoded in JSON
