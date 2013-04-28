@@ -6,33 +6,16 @@ Node.js processes start quickly with the minimum of capabilities. By default
 they can't talk to a web browser. In fact, unlike Ruby processes they can't even
 talk to the filesystem.
 
-For this challenge we need three modules from the standard library.
-
-The `fs` module for reading and writing files
-
-```coffeescript
-fs = require 'fs'
-```
-
 The `http` module allows us to talk the HTTP protocol to other programs
 
 ```coffeescript
 http = require 'http'
 ```
 
-Programs that talk HTTP usually encode information in the querystring format
-(e.g. `item=%22foo+bar%22`)
+The `send` module handles serving the contents of a file as a http response
 
 ```coffeescript
-querystring = require 'querystring'
-```
-
-We also load CoffeeScript (from npm, node's rubygems equivalent) so we can
-write our front end code in CS then compile it to JS before sending it to the
-client.
-
-```coffeescript
-cs = require 'coffee-script'
+send = require 'send'
 ```
 
 Connect is a library for passing http request and response objects through a
@@ -49,118 +32,83 @@ rack library but lower down than something like Sinatra.
 connect = require 'connect'
 ```
 
+Dispatch returns a handler that only matches a specific method and path
+
+```coffeescript
+dispatch = require 'dispatch'
+```
+
+A hanlder that parses the querystring POST body into a map
+
+```coffeescript
+urlencodedBody = connect.urlencoded()
+```
+
 Create the connect chain
 
 ```coffeescript
 app = connect()
 ```
 
-A GET on the root url renders the UI
+A GET on the root url renders the UI. The UI is just some template html with a
+script tag down the bottom that loads in all the behavior.
 
 ```coffeescript
-app.use (req, res, next) ->
-  return next() unless req.url is '/' and req.method is 'GET'
-  res.setHeader 'Content-Type', 'text/html'
-
-  renderUI (err, html) ->
-    return next err if err?
-    res.end html
-```
-
-A POST parses out the updated value, save it then renders the UI
-
-```coffeescript
-app.use (req, res, next) ->
-  return next() unless req.url is '/' and req.method is 'POST'
-  res.setHeader 'Content-Type', 'text/html'
-
-  body = ''
-  req.on 'data', (data) -> body += data
-  req.on 'end', ->
-    {item} = querystring.parse body
-    saveData item, (err) ->
-      return next err if err?
-      renderUI (err, html) ->
-        return next err if err?
-        res.end html
-```
-
-A GET to `/data.json` returns the historical contents of the item as a list
-of strings encoded in JSON
-
-```coffeescript
-app.use (req, res, next) ->
-  return next() unless req.url is '/data.json' and req.method is 'GET'
-  res.setHeader 'Content-Type', 'text/json'
-
-  loadData (err, data) ->
-    return next err if err?
-    res.end JSON.stringify data
+app.use dispatch 'GET /' : (req, res, next) ->
+  send(req, 'template.html').pipe res
 ```
 
 A GET to `/default.appcache` returns the list of paths that the browser should
 cache and not request again unless the contents of _this_ route (the manifest)
-change. Right now that's just the root path.
-
-Below the list of paths we include the "client fingerprint" in a comment. This
-is a string is guaranteed to change every time one of the files used to build
-the contents of the root url changes.
+change.
 
 ```coffeescript
-app.use (req, res, next) ->
-  return next() unless req.url is '/default.appcache' and req.method is 'GET'
-  clientFingerprint (err, fingerprint) ->
-    return next err if err?
-    res.end """
-    CACHE MANIFEST
-    CACHE:
-    /
-    NETWORK:
-    *
-    # client fingerprint: #{fingerprint}
-    """
+app.use dispatch 'GET /default.appcache' : (req, res, next) ->
+  clientManifest (err, manifest) ->
+    if err then next err ; return
+    res.end manifest
 
-clientFingerprint = require './client-fingerprint'
+clientManifest = require './cache-manifest'
 ```
 
-Data is stored in a flat file; `saveData` takes a new value and appends it to
-the end of the file; `loadData` returns all historical values in chronlogical
-order.
+A GET to `/app.js` renders the application's javascript
 
 ```coffeescript
-dataFile = './item.txt'
+app.use dispatch 'GET /app.js' : (req, res, next) ->
+  clientCompiler (err, js) ->
+    if err then next err ; return
+    res.setHeader 'Content-Type', 'text/javascript'
+    res.end js
 
-saveData = (data, cb) ->
-  fs.appendFile dataFile, data + "\n", 'utf8', cb
-
-loadData = (cb) ->
-  fs.readFile dataFile, 'utf8', (err, data) ->
-    return cb err if err?
-    lines = data.trim().split "\n"
-    cb noErr, lines
+clientCompiler = require './client-compiler'
 ```
 
-The HTML UI is made up of the DOM template and some frontend code to load
-the data into the template.
+A GET to `/app.css` renders the application's css
 
 ```coffeescript
-renderUI = (cb) ->
-  cb noErr, [ template, '<script>', appJS, '</script>' ].join "\n"
-
-template = fs.readFileSync 'template.html'
+app.use dispatch 'GET /app.css' : (req, res, next) ->
+  send(req, 'app.css').pipe res
 ```
 
-The frontend code is written in CoffeeScript then compiled to JS and wrapped
-in a script tag
+We have two routes for dealing with data, a GET to `/data.json` returns the
+historical contents of the item as a list of strings encoded in JSON. A POST
+to `/` parses out the updated value, save it then renders the UI
 
 ```coffeescript
-deps = ''
-deps += fs.readFileSync 'reqwest.js', 'utf8'
-deps += fs.readFileSync 'ready.js', 'utf8'
+db = require './db'
 
-appCS = fs.readFileSync 'client.litcoffee', 'utf8'
-appJS = cs.compile appCS, literate: yes
-appJS = [ deps, appJS ].join ";\n"
+app.use dispatch 'POST /' : connect urlencodedBody, (req, res, next) ->
+  {item} = req.body
+  db.saveData item, (err) ->
+    if err then next err ; return
+    res.setHeader 'Content-Type', 'text/json'
+    res.end JSON.stringify {item}
+
+app.use dispatch 'GET /data.json' : (req, res, next) ->
+  db.loadData (err, data) ->
+    if err then next err ; return
+    res.setHeader 'Content-Type', 'text/json'
+    res.end JSON.stringify data
 ```
 
 Create a web server, pass the connect chain to it and start listening on a port
@@ -171,9 +119,5 @@ server = http.createServer app
 server.listen port, -> console.log "app running on port #{port}"
 ```
 
-* * *
-
-Alias to enhance readability
-
-    noErr = null
+.
 
